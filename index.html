@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#ffffff">
+  <title>Mapa Cultural de Pernambuco</title>
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="brand">
+        <span class="brand-mark">PE</span>
+        <div class="brand-copy">
+          <strong>Mapa Cultural</strong>
+          <span>Pernambuco</span>
+        </div>
+      </div>
+
+      <p class="header-subtitle">Explore as tradições, sabores, músicas e manifestações culturais de cada município.</p>
+
+      <div class="search-box" aria-label="Buscar município">
+        <div class="search-field">
+          <label for="citySearch" class="sr-only">Buscar município</label>
+          <input id="citySearch" type="search" placeholder="Buscar município..." autocomplete="off" spellcheck="false">
+          <div class="search-results hidden" id="searchResults" role="listbox"></div>
+        </div>
+        <button id="searchBtn" type="button">Buscar</button>
+      </div>
+    </div>
+    <div class="header-colors" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+  </header>
+
+  <main class="map-section">
+    <div class="map-wrap" id="mapWrap">
+      <div class="map-loading" id="mapLoading">
+        <div class="spinner"></div>
+        <span>Carregando mapa...</span>
+      </div>
+      <div id="map" aria-label="Mapa interativo dos municípios de Pernambuco"></div>
+      <div class="map-legend"><span class="legend-dot"></span><span>Clique em uma cidade para explorar</span></div>
+    </div>
+  </main>
+
+  <div class="modal-backdrop hidden" id="cityModal" role="presentation">
+    <section class="city-modal" role="dialog" aria-modal="true" aria-labelledby="cityName">
+      <button class="modal-close" id="modalClose" type="button" aria-label="Fechar">&times;</button>
+      <div class="modal-accent"></div>
+      <div class="city-content">
+        <div class="city-meta">
+          <span class="city-state">PERNAMBUCO</span>
+          <span class="city-region" id="cityRegion">—</span>
+        </div>
+        <h2 id="cityName">—</h2>
+        <p class="city-intro" id="cityIntro">—</p>
+
+        <div class="culture-grid">
+          <article>
+            <span class="card-icon">◈</span>
+            <h3>Manifestações</h3>
+            <p id="cultureManifestations">—</p>
+          </article>
+          <article>
+            <span class="card-icon">♫</span>
+            <h3>Música e dança</h3>
+            <p id="cultureMusic">—</p>
+          </article>
+          <article>
+            <span class="card-icon">✦</span>
+            <h3>Gastronomia</h3>
+            <p id="cultureFood">—</p>
+          </article>
+          <article>
+            <span class="card-icon">◇</span>
+            <h3>Artesanato</h3>
+            <p id="cultureCraft">—</p>
+          </article>
+        </div>
+
+        <div class="highlight" id="cultureHighlight">—</div>
+        
+      </div>
+    </section>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="app.js"></script>
+</body>
+</html>
