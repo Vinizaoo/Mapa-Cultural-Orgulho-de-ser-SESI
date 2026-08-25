@@ -138,10 +138,31 @@ const cultureData = {
   }
 };
 
+const sesiUnitsByCity = {
+  'Araripina': ['Escola SESI Araripina'],
+  'Belo Jardim': ['Escola SESI Belo Jardim'],
+  'Cabo de Santo Agostinho': ['Escola SESI Cabo de Santo Agostinho'],
+  'Camaragibe': ['Escola SESI Camaragibe'],
+  'Caruaru': ['Escola SESI Caruaru'],
+  'Escada': ['Escola SESI Escada'],
+  'Goiana': ['Escola SESI Goiana'],
+  'Moreno': ['Escola SESI Moreno (A maior e melhor de TODAS!)'],
+  'Paulista': ['Escola SESI Paulista'],
+  'Petrolina': ['Escola SESI Petrolina'],
+  'Recife': ['Escola SESI Ibura', 'Escola SESI Vasco da Gama']
+};
+
+const sesiCities = new Set(Object.keys(sesiUnitsByCity));
+const foundSesiCities = new Set();
+let completionShown = false;
+
 
 let geoLayer;
 let selectedLayer = null;
 let municipalities = [];
+
+const sesiTotal = sesiCities.size;
+
 
 const normalStyle = {
   color: '#fff',
@@ -163,8 +184,6 @@ const selectedStyle = {
   fillColor: '#063b74',
   fillOpacity: 1
 };
-
-
 
 function normalize(text) {
   return text
@@ -221,6 +240,7 @@ function pickVariation(items, name, offset = 0) {
 function buildRegionalProfile(name) {
   const region = getRegion(name);
   const profile = regionalProfiles[region];
+
   return {
     intro: pickVariation(profile.intros, name),
     manifestations: pickVariation(profile.manifestations, name, 1),
@@ -232,6 +252,32 @@ function buildRegionalProfile(name) {
   };
 }
 
+function registerSesiDiscovery(name) {
+  if (!sesiCities.has(name)) return;
+
+  foundSesiCities.add(name);
+  updateSesiCounter();
+
+  if (foundSesiCities.size === sesiTotal && !completionShown) {
+    completionShown = true;
+    setTimeout(showCompletionModal, 350);
+  }
+}
+
+function updateSesiCounter() {
+  document.getElementById('sesiFoundCount').textContent = foundSesiCities.size;
+  document.getElementById('sesiTotalCount').textContent = sesiTotal;
+  document.getElementById('sesiCounter').classList.toggle('complete', foundSesiCities.size === sesiTotal);
+}
+
+function showCompletionModal() {
+  document.getElementById('completionModal').classList.remove('hidden');
+}
+
+function closeCompletionModal() {
+  document.getElementById('completionModal').classList.add('hidden');
+}
+
 function showCity(name, data, layer = null) {
   if (selectedLayer && selectedLayer !== layer) selectedLayer.setStyle(normalStyle);
 
@@ -240,6 +286,7 @@ function showCity(name, data, layer = null) {
     selectedLayer = layer;
   }
 
+  registerSesiDiscovery(name);
   openCityModal();
   setModalLoading(name);
 
@@ -263,17 +310,32 @@ function fillModal(name, city) {
   document.getElementById('cityName').textContent = name;
   document.getElementById('cityRegion').textContent = getRegion(name);
   document.getElementById('cityIntro').textContent = city.intro;
+
   document.getElementById('cultureManifestations').textContent = city.manifestations;
   document.getElementById('cultureMusic').textContent = city.music;
   document.getElementById('cultureFood').textContent = city.food;
   document.getElementById('cultureCraft').textContent = city.craft;
   document.getElementById('cultureHighlight').textContent = city.highlight;
+
+  if (sesiUnitsByCity[name]) {
+    const units = sesiUnitsByCity[name];
+    const sesiNotice = document.getElementById('sesiNotice');
+    sesiNotice.classList.remove('hidden');
+
+    if (units.length > 1) {
+      sesiNotice.innerHTML = `<strong>Grande achado! ${name} possui ${units.length} unidades do SESI.</strong><span>${units.join(' e ')}. Essa cidade conta como um único achado no contador, mas guarda mais de uma unidade do SESI.</span>`;
+    } else {
+      sesiNotice.innerHTML = `<strong>Você encontrou uma cidade com SESI!</strong><span>${name} possui a ${units[0]}.</span>`;
+    }
+  }
 }
 
 function onEachFeature(feature, layer) {
   const name = feature.properties?.nome || feature.properties?.name || 'Município';
+
   municipalities.push({ name, layer });
   layer.setStyle(normalStyle);
+
   layer.bindTooltip(`${name} · clique para explorar`, {
     sticky: true,
     direction: 'top'
@@ -334,9 +396,7 @@ function renderSearchResults(term) {
     button.className = 'search-result';
     button.setAttribute('role', 'option');
     button.innerHTML = `<span class="result-dot"></span><span>${item.name}</span>`;
-    button.addEventListener('click', () => {
-      selectSearchResult(item);
-    });
+    button.addEventListener('click', () => selectSearchResult(item));
     resultsBox.appendChild(button);
   });
 
@@ -352,6 +412,7 @@ function selectSearchResult(item) {
 
 function searchCity() {
   const term = normalize(document.getElementById('citySearch').value.trim());
+
   if (!term) return;
 
   const found = municipalities.find(item => normalize(item.name) === term)
@@ -381,31 +442,47 @@ fetch(geojsonUrl)
     document.getElementById('mapLoading').innerHTML = '<strong>Não foi possível carregar o mapa.</strong><span>Verifique sua conexão com a internet e recarregue a página.</span>';
   });
 
+document.getElementById('completionClose').addEventListener('click', closeCompletionModal);
+
 document.getElementById('modalClose').addEventListener('click', closeCityModal);
+
 document.getElementById('cityModal').addEventListener('click', event => {
   if (event.target.id === 'cityModal') closeCityModal();
 });
+
 document.addEventListener('keydown', event => {
   if (event.key === 'Escape') {
+    if (!document.getElementById('completionModal').classList.contains('hidden')) {
+      closeCompletionModal();
+      return;
+    }
     if (!document.getElementById('searchResults').classList.contains('hidden')) {
       document.getElementById('searchResults').classList.add('hidden');
       return;
     }
+
     closeCityModal();
   }
 });
+
 document.addEventListener('click', event => {
   const searchBox = document.querySelector('.search-box');
+
   if (!searchBox.contains(event.target)) {
     document.getElementById('searchResults').classList.add('hidden');
   }
 });
+
 document.getElementById('searchBtn').addEventListener('click', searchCity);
 document.getElementById('citySearch').addEventListener('input', event => renderSearchResults(event.target.value));
+
 document.getElementById('citySearch').addEventListener('keydown', event => {
   if (event.key === 'Enter') searchCity();
+
   if (event.key === 'ArrowDown') {
     const first = document.querySelector('.search-result');
     if (first) first.focus();
   }
 });
+
+updateSesiCounter();
