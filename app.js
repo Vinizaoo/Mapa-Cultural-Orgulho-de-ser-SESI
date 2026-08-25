@@ -146,7 +146,7 @@ let municipalities = [];
 const normalStyle = {
   color: '#ffffff',
   weight: 1,
-  fillColor: '#0b64b7',
+  fillColor: '#064b8f',
   fillOpacity: 0.83
 };
 
