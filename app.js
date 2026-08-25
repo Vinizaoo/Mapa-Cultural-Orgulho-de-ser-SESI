@@ -144,9 +144,9 @@ let selectedLayer = null;
 let municipalities = [];
 
 const normalStyle = {
-  color: '#042f5a',
+  color: '#171aa6',
   weight: 1,
-  fillColor: '#042f5a',
+  fillColor: '#fff',
   fillOpacity: 0.83
 };
 
