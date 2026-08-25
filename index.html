@@ -22,13 +22,20 @@
 
       <p class="header-subtitle">Explore as tradições, sabores, músicas e manifestações culturais de cada município.</p>
 
-      <div class="search-box" aria-label="Buscar município">
+      <div class="header-right">
+        <div class="sesi-counter" id="sesiCounter" aria-label="Cidades com SESI encontradas">
+          <span class="counter-label">SESI encontrados</span>
+          <strong><span id="sesiFoundCount">0</span>/<span id="sesiTotalCount">10</span></strong>
+        </div>
+
+        <div class="search-box" aria-label="Buscar município">
         <div class="search-field">
           <label for="citySearch" class="sr-only">Buscar município</label>
           <input id="citySearch" type="search" placeholder="Buscar município..." autocomplete="off" spellcheck="false">
           <div class="search-results hidden" id="searchResults" role="listbox"></div>
         </div>
         <button id="searchBtn" type="button">Buscar</button>
+        </div>
       </div>
     </div>
     <div class="header-colors" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
@@ -45,6 +52,16 @@
     </div>
   </main>
 
+  <div class="completion-backdrop hidden" id="completionModal" role="presentation">
+    <section class="completion-modal" role="dialog" aria-modal="true" aria-labelledby="completionTitle">
+      <div class="completion-badge">★</div>
+      <span class="completion-kicker">DESAFIO CONCLUÍDO</span>
+      <h2 id="completionTitle">Você encontrou todas as cidades com SESI!</h2>
+      <p>Parabéns! Você explorou todas as cidades de Pernambuco presentes neste desafio.</p>
+      <button id="completionClose" type="button">Continuar explorando</button>
+    </section>
+  </div>
+
   <div class="modal-backdrop hidden" id="cityModal" role="presentation">
     <section class="city-modal" role="dialog" aria-modal="true" aria-labelledby="cityName">
       <button class="modal-close" id="modalClose" type="button" aria-label="Fechar">&times;</button>
@@ -56,6 +73,11 @@
         </div>
         <h2 id="cityName">—</h2>
         <p class="city-intro" id="cityIntro">—</p>
+
+        <div class="sesi-notice hidden" id="sesiNotice">
+          <strong>Esta cidade possui uma unidade do SESI.</strong>
+          <span>O município conta com uma unidade do SESI Pernambuco, contribuindo com ações voltadas à educação, saúde e qualidade de vida.</span>
+        </div>
 
         <div class="culture-grid">
           <article>
@@ -81,7 +103,6 @@
         </div>
 
         <div class="highlight" id="cultureHighlight">—</div>
-        
       </div>
     </section>
   </div>
