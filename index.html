@@ -23,9 +23,12 @@
       <p class="header-subtitle">Explore as tradições, sabores, músicas e manifestações culturais de cada município.</p>
 
       <div class="header-right">
+        <button class="header-action" id="rankingBtn" type="button">Ranking</button>
+        <button class="header-action" id="challengesBtn" type="button">Desafios</button>
+
         <div class="sesi-counter" id="sesiCounter" aria-label="Cidades com SESI encontradas">
           <span class="counter-label">SESI encontrados</span>
-          <strong><span id="sesiFoundCount">0</span>/<span id="sesiTotalCount">10</span></strong>
+          <strong><span id="sesiFoundCount">0</span>/<span id="sesiTotalCount">11</span></strong>
         </div>
 
         <div class="search-box" aria-label="Buscar município">
@@ -104,6 +107,63 @@
 
         <div class="highlight" id="cultureHighlight">—</div>
       </div>
+    </section>
+  </div>
+
+
+  <div class="overlay-backdrop hidden" id="challengeHub" role="presentation">
+    <section class="overlay-panel" role="dialog" aria-modal="true" aria-labelledby="challengeTitle">
+      <button class="overlay-close" type="button" data-close-overlay="challengeHub" aria-label="Fechar">&times;</button>
+      <div id="challengeIntroView">
+        <span class="panel-kicker">DESAFIOS</span>
+        <h2 id="challengeTitle">Entre para os desafios</h2>
+        <p>Escolha um nome para aparecer nos placares. O nome fica só nesta sessão.</p>
+        <form id="playerForm" class="name-form">
+          <label for="playerName">Seu nome</label>
+          <input id="playerName" maxlength="18" required placeholder="Ex.: XABLAU" autocomplete="off">
+          <button type="submit">Continuar</button>
+        </form>
+      </div>
+
+      <div id="challengeListView" class="hidden">
+        <span class="panel-kicker">DESAFIOS</span>
+        <div class="player-line">Jogando como <strong id="playerNameLabel">—</strong><button type="button" class="logout-button" id="logoutButton">Sair</button></div>
+        <div class="challenge-list">
+          <button class="challenge-card" data-challenge="quiz">
+            <strong>Quiz cultural</strong><span>5 perguntas rápidas sobre Pernambuco.</span>
+          </button>
+          <button class="challenge-card" data-challenge="misteriosa">
+            <strong>Cidade misteriosa</strong><span>Descubra a cidade pelas pistas.</span>
+          </button>
+          <button class="challenge-card" data-challenge="mapa">
+            <strong>Mapa às cegas</strong><span>Encontre no mapa as cinco cidades que o desafio pedir.</span>
+          </button>
+          <button class="challenge-card" data-challenge="speedrun">
+            <strong>Speedrun SESI</strong><span>Encontre todas as cidades com SESI no menor tempo.</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="challengeGameView" class="hidden">
+        <span class="panel-kicker" id="gameKicker">DESAFIO</span>
+        <h2 id="gameTitle">—</h2>
+        <div id="gameBody"></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="overlay-backdrop hidden" id="rankingHub" role="presentation">
+    <section class="overlay-panel ranking-panel" role="dialog" aria-modal="true" aria-labelledby="rankingTitle">
+      <button class="overlay-close" type="button" data-close-overlay="rankingHub" aria-label="Fechar">&times;</button>
+      <span class="panel-kicker">RANKING</span>
+      <h2 id="rankingTitle">Escolha um desafio</h2>
+      <div class="ranking-options">
+        <button data-ranking="quiz">Quiz cultural</button>
+        <button data-ranking="misteriosa">Cidade misteriosa</button>
+        <button data-ranking="mapa">Mapa às cegas</button>
+        <button data-ranking="speedrun">Speedrun SESI</button>
+      </div>
+      <div id="rankingResults" class="ranking-results hidden"></div>
     </section>
   </div>
 
