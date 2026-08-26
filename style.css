@@ -858,3 +858,23 @@ button { cursor: pointer; }
   color: #68758a;
   font-size: 0.88rem;
 }
+
+.site-footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  padding: 7px 12px;
+  text-align: center;
+  font-size: 0.72rem;
+  color: #68758a;
+  background: rgba(255, 255, 255, 0.9);
+  border-top: 1px solid #d8e3ef;
+  backdrop-filter: blur(4px);
+}
+
+.site-footer strong {
+  color: #063b74;
+  font-weight: 700;
+}
