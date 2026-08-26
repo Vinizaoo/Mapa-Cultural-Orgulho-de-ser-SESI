@@ -74,6 +74,24 @@ button { cursor: pointer; }
   min-width: 0;
 }
 
+.header-action {
+  height: 46px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--white);
+  color: var(--blue-dark);
+  font-weight: 700;
+  white-space: nowrap;
+  transition: 0.18s ease;
+}
+
+.header-action:hover {
+  border-color: #b8cee3;
+  background: var(--blue-soft);
+  transform: translateY(-1px);
+}
+
 .sesi-counter {
   display: flex;
   flex-direction: column;
@@ -590,4 +608,253 @@ button { cursor: pointer; }
 
 .completion-modal button:hover {
   background: var(--blue-dark);
+}
+
+
+.overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2800;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  background: rgba(5, 27, 52, 0.62);
+  backdrop-filter: blur(6px);
+}
+
+.overlay-panel {
+  position: relative;
+  width: min(760px, 100%);
+  max-height: 90vh;
+  overflow: auto;
+  padding: 34px;
+  border: 1px solid rgba(255,255,255,.85);
+  border-radius: 22px;
+  background: var(--white);
+  box-shadow: 0 28px 90px rgba(0,0,0,.3);
+}
+
+.overlay-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--white);
+  color: var(--ink);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.panel-kicker {
+  color: var(--blue);
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .15em;
+}
+
+.overlay-panel h2 {
+  margin: 8px 48px 10px 0;
+  color: var(--blue-dark);
+  font-family: 'Libre Baskerville', Georgia, serif;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+}
+
+.overlay-panel p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.name-form {
+  display: grid;
+  gap: 8px;
+  max-width: 430px;
+  margin-top: 22px;
+}
+
+.name-form label {
+  font-size: .85rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.name-form input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  outline: none;
+}
+
+.name-form input:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(7,87,168,.12);
+}
+
+.name-form button,
+.ranking-options button,
+.challenge-card,
+.game-button {
+  border: 0;
+  border-radius: 12px;
+  background: var(--blue);
+  color: var(--white);
+  font-weight: 700;
+}
+
+.name-form button {
+  padding: 12px 15px;
+}
+
+.player-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: .9rem;
+}
+
+.logout-button {
+  margin-left: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--blue);
+  font-size: .82rem;
+  font-weight: 700;
+}
+
+.logout-button:hover {
+  text-decoration: underline;
+}
+
+.challenge-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.challenge-card {
+  min-height: 120px;
+  padding: 17px;
+  text-align: left;
+  background: var(--white);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  box-shadow: 0 8px 22px rgba(3,45,92,.06);
+  transition: .18s ease;
+}
+
+.challenge-card:hover {
+  border-color: #b7cde3;
+  background: var(--blue-soft);
+  transform: translateY(-2px);
+}
+
+.challenge-card strong,
+.challenge-card span {
+  display: block;
+}
+
+.challenge-card strong { color: var(--blue-dark); font-size: 1rem; }
+.challenge-card span { margin-top: 8px; color: var(--muted); font-size: .88rem; line-height: 1.5; font-weight: 500; }
+
+.game-box { margin-top: 18px; }
+.game-question { color: var(--ink); font-size: 1.05rem; font-weight: 700; line-height: 1.55; }
+.game-options { display: grid; gap: 10px; margin-top: 14px; }
+.game-option { padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--white); color: var(--ink); text-align: left; }
+.game-option:hover { background: var(--blue-soft); border-color: #b7cde3; }
+.game-status { margin-top: 16px; color: var(--muted); font-size: .9rem; }
+.game-button { margin-top: 16px; padding: 11px 15px; }
+
+.ranking-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+.ranking-options button { padding: 13px; background: var(--blue-soft); color: var(--blue-dark); border: 1px solid #cfe1f3; }
+.ranking-options button:hover { background: #dcecf9; }
+
+.ranking-results { margin-top: 22px; }
+.ranking-results h3 { margin: 0 0 12px; color: var(--blue-dark); }
+.ranking-row { display: grid; grid-template-columns: 42px 1fr 90px; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.ranking-row strong { color: var(--blue-dark); }
+.ranking-row span:last-child { text-align: right; font-weight: 800; color: var(--blue); }
+.empty-ranking { padding: 16px; border-radius: 12px; background: var(--blue-soft); color: var(--muted); }
+
+.challenge-hud {
+  position: fixed;
+  top: 102px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1900;
+  min-width: 290px;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255,255,255,.96);
+  box-shadow: 0 12px 30px rgba(3,45,92,.14);
+  text-align: center;
+}
+
+.challenge-hud strong { display: block; color: var(--blue-dark); }
+.challenge-hud span { display: block; margin-top: 4px; color: var(--muted); font-size: .85rem; }
+.challenge-hud button { margin-top: 8px; padding: 7px 11px; border: 0; border-radius: 9px; background: var(--blue); color: white; font-weight: 700; }
+
+.challenge-cities { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 7px; }
+.challenge-city-chip { padding: 6px 9px; border-radius: 999px; background: var(--blue-soft); color: var(--blue-dark); font-size: .78rem; }
+.challenge-city-chip.found { background: #d9f2df; color: #1d6a32; }
+
+@media (max-width: 920px) {
+  .header-right { flex-wrap: wrap; }
+  .header-action { height: 42px; padding: 0 11px; }
+  .sesi-counter { height: 42px; }
+  .search-box { min-width: 260px; }
+}
+
+@media (max-width: 720px) {
+  .challenge-list, .ranking-options { grid-template-columns: 1fr; }
+  .overlay-panel { padding: 26px 20px; }
+  .challenge-hud { top: 165px; min-width: 250px; }
+}
+
+.ranking-note { margin: -6px 0 14px; color: var(--muted); font-size: 0.8rem; }
+
+.map-targets { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
+.map-targets .challenge-city-chip { opacity: .8; }
+.map-targets .challenge-city-chip.found { opacity: 1; }
+
+.challenge-timer {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 10px 13px;
+  border: 1px solid #d8e3ef;
+  border-radius: 10px;
+  background: #f5f8fc;
+  color: #68758a;
+  font-size: 0.82rem;
+}
+
+.challenge-timer strong,
+.challenge-hud-time {
+  color: #063b74;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+.challenge-hud-time {
+  display: inline-block;
+  margin-left: 10px;
+  font-size: 0.95rem;
+}
+
+.game-time-result {
+  margin-top: 6px;
+  color: #68758a;
+  font-size: 0.88rem;
 }
