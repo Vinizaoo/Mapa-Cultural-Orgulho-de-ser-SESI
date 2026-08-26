@@ -146,7 +146,7 @@ const sesiUnitsByCity = {
   'Caruaru': ['Escola SESI Caruaru'],
   'Escada': ['Escola SESI Escada'],
   'Goiana': ['Escola SESI Goiana'],
-  'Moreno': ['Escola SESI Moreno (A maior e melhor de TODAS!)'],
+  'Moreno': ['Escola SESI Moreno (A MAIOR E MELHOR DE TODAS!)'],
   'Paulista': ['Escola SESI Paulista'],
   'Petrolina': ['Escola SESI Petrolina'],
   'Recife': ['Escola SESI Ibura', 'Escola SESI Vasco da Gama']
@@ -287,6 +287,12 @@ function showCity(name, data, layer = null) {
   }
 
   registerSesiDiscovery(name);
+
+  if (activeTimedChallenge) {
+    handleTimedChallengeCity(name);
+    return;
+  }
+
   openCityModal();
   setModalLoading(name);
 
@@ -317,16 +323,23 @@ function fillModal(name, city) {
   document.getElementById('cultureCraft').textContent = city.craft;
   document.getElementById('cultureHighlight').textContent = city.highlight;
 
+  const sesiNotice = document.getElementById('sesiNotice');
+
   if (sesiUnitsByCity[name]) {
     const units = sesiUnitsByCity[name];
-    const sesiNotice = document.getElementById('sesiNotice');
     sesiNotice.classList.remove('hidden');
 
     if (units.length > 1) {
-      sesiNotice.innerHTML = `<strong>Grande achado! ${name} possui ${units.length} unidades do SESI.</strong><span>${units.join(' e ')}. Essa cidade conta como um único achado no contador, mas guarda mais de uma unidade do SESI.</span>`;
+      if (name === 'Moreno') {
+        sesiNotice.innerHTML = `<strong>Grande achado! Moreno possui uma unidade do SESI.</strong><span>É apresentada aqui como a maior e melhor unidade do SESI de todas.</span>`;
+      } else {
+        sesiNotice.innerHTML = `<strong>Grande achado! ${name} possui ${units.length} unidades do SESI.</strong><span>${units.join(' e ')}. Essa cidade conta como um único achado no contador, mas guarda mais de uma unidade do SESI.</span>`;
+      }
     } else {
       sesiNotice.innerHTML = `<strong>Você encontrou uma cidade com SESI!</strong><span>${name} possui a ${units[0]}.</span>`;
     }
+  } else {
+    sesiNotice.classList.add('hidden');
   }
 }
 
@@ -483,6 +496,379 @@ document.getElementById('citySearch').addEventListener('keydown', event => {
     const first = document.querySelector('.search-result');
     if (first) first.focus();
   }
+});
+
+
+const challengeNames = {
+  quiz: 'Quiz cultural',
+  misteriosa: 'Cidade misteriosa',
+  mapa: 'Mapa às cegas',
+  speedrun: 'Speedrun SESI'
+};
+
+let playerName = '';
+let activeTimedChallenge = null;
+let timedChallengeSet = new Set();
+let timedChallengeInterval = null;
+let mapChallengeTargets = [];
+let mapChallengeFound = new Set();
+
+const quizQuestions = [
+  { question: 'Qual ritmo é um dos maiores símbolos do Carnaval de Pernambuco?', options: ['Frevo', 'Carimbó', 'Sertanejo', 'Vanerão'], answer: 0 },
+  { question: 'Qual cidade é conhecida pelo Alto do Moura e por sua tradição em cerâmica figurativa?', options: ['Caruaru', 'Petrolina', 'Goiana', 'Triunfo'], answer: 0 },
+  { question: 'Qual manifestação cultural é muito associada à Zona da Mata pernambucana?', options: ['Maracatu de baque solto', 'Bumba meu boi', 'Siriri', 'Fandango'], answer: 0 },
+  { question: 'Qual cidade do Sertão é conhecida pela tradição dos Caretas?', options: ['Triunfo', 'Olinda', 'Escada', 'Cabo de Santo Agostinho'], answer: 0 },
+  { question: 'Qual cidade é conhecida pelo grande São João do Agreste?', options: ['Caruaru', 'Recife', 'Araripina', 'Goiana'], answer: 0 },
+  { question: 'Qual destas expressões musicais marcou Recife de forma especial a partir dos anos 1990?', options: ['Manguebeat', 'Pagode baiano', 'Moda de viola', 'Carimbó'], answer: 0 },
+  { question: 'Qual produto aparece com frequência na culinária de Pernambuco?', options: ['Tapioca', 'Açaí paulista', 'Pinhão', 'Barbecue'], answer: 0 }
+];
+
+const mysteryCities = [
+  { city: 'Caruaru', clues: ['Fica no Agreste.', 'É famosa pelo São João.', 'Tem forte tradição no artesanato do Alto do Moura.'] },
+  { city: 'Triunfo', clues: ['Fica no Sertão do Pajeú.', 'Tem clima de serra.', 'É conhecida pelos Caretas.'] },
+  { city: 'Goiana', clues: ['Fica na Zona da Mata Norte.', 'Tem forte tradição de maracatu.', 'Também possui manifestações como caboclinhos.'] },
+  { city: 'Petrolina', clues: ['Fica no Sertão do São Francisco.', 'A cidade tem relação forte com o Rio São Francisco.', 'É um polo da fruticultura irrigada.'] },
+  { city: 'Olinda', clues: ['Fica no litoral.', 'É conhecida pelas ladeiras e pelo patrimônio histórico.', 'Os bonecos gigantes são uma marca do Carnaval local.'] }
+];
+
+function openOverlay(id) {
+  document.getElementById(id).classList.remove('hidden');
+  document.body.classList.add('modal-open');
+}
+
+function closeOverlay(id) {
+  document.getElementById(id).classList.add('hidden');
+  if (document.querySelectorAll('.overlay-backdrop:not(.hidden), .modal-backdrop:not(.hidden), .completion-backdrop:not(.hidden)').length === 0) {
+    document.body.classList.remove('modal-open');
+  }
+}
+
+function formatTime(ms) {
+  const minutes = Math.floor(ms / 60000);
+  const seconds = Math.floor((ms % 60000) / 1000);
+  const milliseconds = Math.floor(ms % 1000);
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}:${String(milliseconds).padStart(3, '0')}`;
+}
+
+let challengeTimer = null;
+let challengeStart = 0;
+
+function startChallengeTimer() {
+  stopChallengeTimer();
+  challengeStart = performance.now();
+  challengeTimer = setInterval(updateChallengeTimer, 40);
+  updateChallengeTimer();
+}
+
+function getChallengeElapsed() {
+  return challengeStart ? Math.round(performance.now() - challengeStart) : 0;
+}
+
+function updateChallengeTimer() {
+  const timer = document.getElementById('challengeTimer');
+  if (timer && challengeStart) timer.textContent = formatTime(getChallengeElapsed());
+}
+
+function stopChallengeTimer() {
+  if (challengeTimer) clearInterval(challengeTimer);
+  challengeTimer = null;
+}
+
+function saveLocalScore(challenge, score, timeMs) {
+  const key = 'mapaCulturalRanking';
+  const items = JSON.parse(localStorage.getItem(key) || '[]');
+  items.push({ player_name: playerName, challenge, score, time_ms: timeMs, created_at: new Date().toISOString() });
+
+  items.sort((a, b) => {
+    if (challenge === 'speedrun') return Number(a.time_ms || a.score) - Number(b.time_ms || b.score);
+    return Number(b.score) - Number(a.score) || Number(a.time_ms || 0) - Number(b.time_ms || 0);
+  });
+
+  localStorage.setItem(key, JSON.stringify(items.slice(0, 50)));
+}
+
+function submitScore(challenge, score, timeMs) {
+  saveLocalScore(challenge, score, timeMs);
+}
+
+function loadRanking(challenge) {
+  const results = document.getElementById('rankingResults');
+  results.classList.remove('hidden');
+
+  const local = JSON.parse(localStorage.getItem('mapaCulturalRanking') || '[]');
+  const items = local
+    .filter(item => item.challenge === challenge)
+    .sort((a, b) => {
+      if (challenge === 'speedrun') return Number(a.time_ms || a.score) - Number(b.time_ms || b.score);
+      return Number(b.score) - Number(a.score) || Number(a.time_ms || 0) - Number(b.time_ms || 0);
+    });
+
+  if (!items.length) {
+    results.innerHTML = '<div class="empty-ranking">Ainda não existe pontuação neste desafio neste computador.</div>';
+    return;
+  }
+
+  results.innerHTML = `<h3>${challengeNames[challenge]}</h3><p class="ranking-note">Em caso de empate, o menor tempo fica na frente.</p>` + items.slice(0, 10).map((item, index) => {
+    const scoreText = challenge === 'speedrun' ? 'Speedrun concluído' : `${Number(item.score)} pontos`;
+    const timeText = formatTime(Number(item.time_ms || item.score || 0));
+    return `<div class="ranking-row"><strong>${index + 1}º</strong><span>${escapeHtml(item.player_name)}</span><span>${scoreText} · ${timeText}</span></div>`;
+  }).join('');
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char]));
+}
+
+function resetChallengeView() {
+  document.getElementById('challengeIntroView').classList.add('hidden');
+  document.getElementById('challengeListView').classList.remove('hidden');
+  document.getElementById('challengeGameView').classList.add('hidden');
+  document.getElementById('playerNameLabel').textContent = playerName;
+}
+
+function startQuiz() {
+  const questions = [...quizQuestions].sort(() => Math.random() - 0.5).slice(0, 5);
+  let current = 0;
+  let score = 0;
+  document.getElementById('challengeListView').classList.add('hidden');
+  document.getElementById('challengeGameView').classList.remove('hidden');
+
+  function render() {
+    const q = questions[current];
+    document.getElementById('gameKicker').textContent = `QUIZ · ${current + 1}/5`;
+    document.getElementById('gameTitle').textContent = 'Pergunta rápida';
+    document.getElementById('gameBody').innerHTML = `<div class="game-box"><div class="challenge-timer">Tempo <strong id="challengeTimer">00:00:000</strong></div><div class="game-question">${q.question}</div><div class="game-options">${q.options.map((option, index) => `<button class="game-option" data-answer="${index}">${option}</button>`).join('')}</div><div class="game-status">Pontuação: ${score}</div></div>`;
+    document.querySelectorAll('[data-answer]').forEach(button => {
+      button.addEventListener('click', () => {
+        if (Number(button.dataset.answer) === q.answer) score += 10;
+        current += 1;
+        if (current >= questions.length) finishStandardChallenge('quiz', score, 'Quiz concluído!', getChallengeElapsed());
+        else render();
+      });
+    });
+  }
+
+  startChallengeTimer();
+  render();
+}
+
+function startMystery() {
+  const rounds = [...mysteryCities].sort(() => Math.random() - 0.5).slice(0, 3);
+  const choices = [...new Set(mysteryCities.map(item => item.city))];
+  let current = 0;
+  let score = 0;
+  document.getElementById('challengeListView').classList.add('hidden');
+  document.getElementById('challengeGameView').classList.remove('hidden');
+
+  function render() {
+    const round = rounds[current];
+    document.getElementById('gameKicker').textContent = `MISTERIOSA · ${current + 1}/3`;
+    document.getElementById('gameTitle').textContent = 'Qual cidade é essa?';
+    document.getElementById('gameBody').innerHTML = `<div class="game-box"><div class="challenge-timer">Tempo <strong id="challengeTimer">00:00:000</strong></div><div class="game-question">${round.clues.map((clue, i) => `${i + 1}. ${clue}`).join('<br>')}</div><div class="game-options">${choices.sort(() => Math.random() - 0.5).map(city => `<button class="game-option" data-city="${city}">${city}</button>`).join('')}</div><div class="game-status">Pontuação: ${score}</div></div>`;
+    document.querySelectorAll('[data-city]').forEach(button => {
+      button.addEventListener('click', () => {
+        if (button.dataset.city === round.city) score += 10;
+        current += 1;
+        if (current >= rounds.length) finishStandardChallenge('misteriosa', score, 'Desafio concluído!', getChallengeElapsed());
+        else render();
+      });
+    });
+  }
+
+  startChallengeTimer();
+  render();
+}
+
+function startMapChallenge() {
+  if (!municipalities.length) {
+    alert('O mapa ainda está carregando. Tente novamente em alguns segundos.');
+    return;
+  }
+
+  mapChallengeFound = new Set();
+  mapChallengeTargets = [...municipalities]
+    .map(item => item.name)
+    .filter((name, index, arr) => arr.indexOf(name) === index)
+    .sort(() => Math.random() - 0.5)
+    .slice(0, 5);
+
+  closeOverlay('challengeHub');
+
+  const hud = document.createElement('div');
+  hud.className = 'challenge-hud';
+  hud.id = 'challengeHud';
+  hud.innerHTML = `<strong>Mapa às cegas</strong><span id="hudStatus">0/5 cidades encontradas</span><span class="challenge-hud-time" id="challengeTimer">00:00:000</span><div class="map-targets" id="mapTargets"></div><button type="button" id="stopChallenge">Parar</button>`;
+  document.body.appendChild(hud);
+
+  document.getElementById('mapTargets').innerHTML = mapChallengeTargets
+    .map(name => `<span class="challenge-city-chip" data-target-city="${escapeHtml(name)}">${escapeHtml(name)}</span>`)
+    .join('');
+
+  document.getElementById('stopChallenge').addEventListener('click', () => finishMapChallenge(false));
+  startChallengeTimer();
+  updateMapChallengeHud();
+}
+
+function handleMapChallengeCity(name) {
+  if (!mapChallengeTargets.length || mapChallengeFound.has(name) || !mapChallengeTargets.includes(name)) return;
+
+  mapChallengeFound.add(name);
+  updateMapChallengeHud();
+
+  if (mapChallengeFound.size === mapChallengeTargets.length) {
+    finishMapChallenge(true);
+  }
+}
+
+function updateMapChallengeHud() {
+  const status = document.getElementById('hudStatus');
+  if (status) status.textContent = `${mapChallengeFound.size}/${mapChallengeTargets.length} cidades encontradas`;
+
+  document.querySelectorAll('[data-target-city]').forEach(chip => {
+    chip.classList.toggle('found', mapChallengeFound.has(chip.dataset.targetCity));
+  });
+}
+
+function finishMapChallenge(completed) {
+  if (!mapChallengeTargets.length) return;
+
+  const found = mapChallengeFound.size;
+  const score = found * 20;
+  const elapsedMs = getChallengeElapsed();
+  stopChallengeTimer();
+  submitScore('mapa', score, elapsedMs);
+
+  document.getElementById('challengeHud')?.remove();
+  mapChallengeTargets = [];
+  mapChallengeFound = new Set();
+
+  openOverlay('challengeHub');
+  resetChallengeView();
+  document.getElementById('challengeListView').classList.add('hidden');
+  document.getElementById('challengeGameView').classList.remove('hidden');
+  document.getElementById('gameKicker').textContent = 'RESULTADO';
+  document.getElementById('gameTitle').textContent = completed ? 'Desafio concluído!' : 'Desafio encerrado';
+  document.getElementById('gameBody').innerHTML = `<div class="game-box"><div class="game-question">${found}/5 cidades encontradas · ${score} pontos</div><div class="game-time-result">Tempo: ${formatTime(elapsedMs)}</div><p class="game-status">Seu resultado foi salvo no ranking deste computador.</p><button class="game-button" id="backToChallenges">Voltar aos desafios</button></div>`;
+  document.getElementById('backToChallenges').addEventListener('click', resetChallengeView);
+}
+
+function startTimedChallenge(mode) {
+  activeTimedChallenge = mode;
+  timedChallengeSet = new Set();
+
+  closeOverlay('challengeHub');
+  const hud = document.createElement('div');
+  hud.className = 'challenge-hud';
+  hud.id = 'challengeHud';
+  hud.innerHTML = `<strong id="hudTitle">Encontre todas as cidades com SESI</strong><span id="hudStatus">0/${sesiTotal}</span><span class="challenge-hud-time" id="challengeTimer">00:00:000</span><div class="challenge-cities" id="hudCities"></div><button type="button" id="stopChallenge">Parar</button>`;
+  document.body.appendChild(hud);
+
+  startChallengeTimer();
+  document.getElementById('stopChallenge').addEventListener('click', () => finishTimedChallenge(false, getChallengeElapsed()));
+}
+
+function handleTimedChallengeCity(name) {
+  if (!activeTimedChallenge || !sesiCities.has(name) || timedChallengeSet.has(name)) return;
+
+  timedChallengeSet.add(name);
+  const chips = document.getElementById('hudCities');
+  if (chips) chips.innerHTML += `<span class="challenge-city-chip found">${escapeHtml(name)}</span>`;
+
+  if (activeTimedChallenge === 'tempo') {
+    const hudStatus = document.getElementById('hudStatus');
+    if (hudStatus) {
+      const current = hudStatus.textContent.split('·')[1] || '';
+      hudStatus.textContent = `${timedChallengeSet.size}/${sesiTotal}${current ? ` ·${current}` : ''}`;
+    }
+  }
+
+  if (timedChallengeSet.size === sesiTotal) finishTimedChallenge(true, getChallengeElapsed());
+}
+
+function finishTimedChallenge(completed, elapsedMs) {
+  if (!activeTimedChallenge) return;
+  clearInterval(timedChallengeInterval);
+  timedChallengeInterval = null;
+  stopChallengeTimer();
+  const mode = activeTimedChallenge;
+  const score = 0;
+  const title = completed ? 'Speedrun concluído!' : 'Speedrun encerrado';
+  submitScore(mode, score, elapsedMs);
+
+  document.getElementById('challengeHud')?.remove();
+  activeTimedChallenge = null;
+
+  openOverlay('challengeHub');
+  resetChallengeView();
+  document.getElementById('challengeListView').classList.add('hidden');
+  document.getElementById('challengeGameView').classList.remove('hidden');
+  document.getElementById('gameKicker').textContent = 'RESULTADO';
+  document.getElementById('gameTitle').textContent = title;
+  const result = `Tempo: ${formatTime(elapsedMs)} · ${timedChallengeSet.size}/${sesiTotal} cidades encontradas.`;
+  document.getElementById('gameBody').innerHTML = `<div class="game-box"><div class="game-question">${result}</div><p class="game-status">Seu resultado foi salvo no ranking deste computador.</p><button class="game-button" id="backToChallenges">Voltar aos desafios</button></div>`;
+  document.getElementById('backToChallenges').addEventListener('click', resetChallengeView);
+}
+
+function finishStandardChallenge(challenge, score, message, timeMs) {
+  stopChallengeTimer();
+  submitScore(challenge, score, timeMs);
+  document.getElementById('gameKicker').textContent = 'RESULTADO';
+  document.getElementById('gameTitle').textContent = message;
+  document.getElementById('gameBody').innerHTML = `<div class="game-box"><div class="game-question">${score} pontos</div><div class="game-time-result">Tempo: ${formatTime(timeMs)}</div><p class="game-status">Seu resultado foi salvo no ranking deste computador.</p><button class="game-button" id="backToChallenges">Voltar aos desafios</button></div>`;
+  document.getElementById('backToChallenges').addEventListener('click', resetChallengeView);
+}
+
+document.getElementById('rankingBtn').addEventListener('click', () => {
+  openOverlay('rankingHub');
+  document.getElementById('rankingResults').classList.add('hidden');
+});
+
+document.getElementById('challengesBtn').addEventListener('click', () => {
+  openOverlay('challengeHub');
+  if (playerName) resetChallengeView();
+  else {
+    document.getElementById('challengeIntroView').classList.remove('hidden');
+    document.getElementById('challengeListView').classList.add('hidden');
+    document.getElementById('challengeGameView').classList.add('hidden');
+    setTimeout(() => document.getElementById('playerName').focus(), 50);
+  }
+});
+
+document.getElementById('logoutButton').addEventListener('click', () => {
+  stopChallengeTimer();
+  playerName = '';
+  document.getElementById('playerName').value = '';
+  document.getElementById('playerNameLabel').textContent = '—';
+  document.getElementById('challengeIntroView').classList.remove('hidden');
+  document.getElementById('challengeListView').classList.add('hidden');
+  document.getElementById('challengeGameView').classList.add('hidden');
+});
+
+document.getElementById('playerForm').addEventListener('submit', event => {
+  event.preventDefault();
+  const value = document.getElementById('playerName').value.trim();
+  if (!value) return;
+  playerName = value.slice(0, 18);
+  resetChallengeView();
+});
+
+document.querySelectorAll('[data-close-overlay]').forEach(button => {
+  button.addEventListener('click', () => closeOverlay(button.dataset.closeOverlay));
+});
+
+document.querySelectorAll('[data-challenge]').forEach(button => {
+  button.addEventListener('click', () => {
+    const challenge = button.dataset.challenge;
+    if (!playerName) return;
+    if (challenge === 'quiz') startQuiz();
+    if (challenge === 'misteriosa') startMystery();
+    if (challenge === 'mapa') startMapChallenge();
+    if (challenge === 'speedrun') startTimedChallenge(challenge);
+  });
+});
+
+document.querySelectorAll('[data-ranking]').forEach(button => {
+  button.addEventListener('click', () => loadRanking(button.dataset.ranking));
 });
 
 updateSesiCounter();
